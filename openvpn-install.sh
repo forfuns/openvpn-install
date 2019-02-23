@@ -335,7 +335,7 @@ verb 3
 crl-verify crl.pem
 client-to-client" >> /etc/openvpn/server.conf
 	if [[ "$GOOGLEAUTH" = '1' ]]; then
-		"plugin /lib64/security/pam_google_authenticator.so openvpn" >> /etc/openvpn/server.conf
+		echo "plugin /lib64/security/pam_google_authenticator.so openvpn" >> /etc/openvpn/server.conf
 		#"plugin /usr/lib64/openvpn/plugins/openvpn-plugin-auth-pam.so openvpn" >> /etc/openvpn/server.conf
 	fi
 	# Enable net.ipv4.ip_forward for the system
