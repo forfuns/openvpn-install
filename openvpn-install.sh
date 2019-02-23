@@ -426,11 +426,6 @@ cipher AES-256-CBC
 setenv opt block-outside-dns
 key-direction 1
 verb 3" >> /etc/openvpn/client-common.txt
-
-	if [[ "$GOOGLEAUTH" = '1' ]]; then
-		useradd openvpn_$client
-		su - openvpn_$client /usr/local/bin/google-authenticator -t -f
-	fi
 	# Generates the custom client.ovpn
 	newclient "$CLIENT"
 	echo
