@@ -227,14 +227,14 @@ else
 		# Else, the distro is CentOS
 		yum install epel-release -y
 		yum install openvpn iptables openssl ca-certificates -y
-		yum install -y gcc gcc-c++ auotmake auotconf make libpng-devel libtool wget git
+		yum install -y gcc gcc-c++ auotmake auotconf make libpng-devel libtool wget git pam-devel
 	fi
 
 	# with Google auth
 	if [[ "$GOOGLEAUTH" = '1' ]]; then
 		git clone https://github.com/google/google-authenticator-libpam.git
 		cd google-authenticator-libpam
-		./bootstrap.sh && ./configure && make && make install
+		./bootstrap.sh ./configure && && ./configure && make && make install
 		cp -a /usr/local/lib/security/pam_google_authenticator.so /lib64/security/pam_google_authenticator.so
 		echo "# google auth
 auth        required    /usr/local/lib/security/pam_google_authenticator.so
