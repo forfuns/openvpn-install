@@ -428,8 +428,8 @@ key-direction 1
 verb 3" >> /etc/openvpn/client-common.txt
 
 	if [[ "$GOOGLEAUTH" = '1' ]]; then
-		useradd $client
-		su - $client@openvpn /usr/local/bin/google-authenticator -t -f
+		useradd openvpn_$client
+		su - openvpn_$client /usr/local/bin/google-authenticator -t -f
 	fi
 	# Generates the custom client.ovpn
 	newclient "$CLIENT"
