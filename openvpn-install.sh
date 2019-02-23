@@ -65,7 +65,7 @@ if [[ -e /etc/openvpn/server.conf ]]; then
 		echo "   4) Exit"
 		read -p "Select an option [1-4]: " option
 		case $option in
-			1) 
+			1)
 			echo
 			echo "Tell me a name for the client certificate."
 			echo "Please, use one word only, no special characters."
@@ -114,7 +114,7 @@ if [[ -e /etc/openvpn/server.conf ]]; then
 			fi
 			exit
 			;;
-			3) 
+			3)
 			echo
 			read -p "Do you really want to remove OpenVPN? [y/N]: " -e REMOVE
 			if [[ "$REMOVE" = 'y' || "$REMOVE" = 'Y' ]]; then
@@ -188,13 +188,20 @@ else
 	echo "   2) TCP"
 	read -p "Protocol [1-2]: " -e -i 1 PROTOCOL
 	case $PROTOCOL in
-		1) 
+		1)
 		PROTOCOL=udp
 		;;
-		2) 
+		2)
 		PROTOCOL=tcp
 		;;
 	esac
+
+	echo
+	echo "With Google google-authenticator"
+	echo "   1) YES"
+	echo "   2) NO"
+	read -p "GOOGLEAUTH [1-2]: " -e -i 1 GOOGLEAUTH
+
 	echo
 	echo "What port do you want OpenVPN listening to?"
 	read -p "Port: " -e -i 1194 PORT
@@ -220,7 +227,27 @@ else
 		# Else, the distro is CentOS
 		yum install epel-release -y
 		yum install openvpn iptables openssl ca-certificates -y
+
+		if [[ "$GOOGLEAUTH" = '1' ]]; then
+
+			yum install -y google-authenticator
+
+		fi
+
 	fi
+
+	# with Google auth
+	if [[ "$GOOGLEAUTH" = '1' ]]; then
+		cp -a /usr/local/lib/security/pam_google_authenticator.so /lib64/security/pam_google_authenticator.so
+		echo "# google auth
+auth        required    /usr/local/lib/security/pam_google_authenticator.so
+
+account        required    pam_nologin.so
+account        include        system-auth
+password    include        system-auth
+session        include        system-auth" > /etc/pam.d/openvpn
+	fi
+
 	# Get easy-rsa
 	EASYRSAURL='https://github.com/OpenVPN/easy-rsa/releases/download/v3.0.6/EasyRSA-unix-v3.0.6.tgz'
 	wget -O ~/easyrsa.tgz "$EASYRSAURL" 2>/dev/null || curl -Lo ~/easyrsa.tgz "$EASYRSAURL"
@@ -262,6 +289,7 @@ cert server.crt
 key server.key
 dh dh.pem
 auth SHA512
+comp-lzo
 tls-auth ta.key 0
 topology subnet
 server 10.8.0.0 255.255.255.0
@@ -307,7 +335,11 @@ persist-key
 persist-tun
 status openvpn-status.log
 verb 3
-crl-verify crl.pem" >> /etc/openvpn/server.conf
+crl-verify crl.pem
+client-to-client" >> /etc/openvpn/server.conf
+	if [[ "$GOOGLEAUTH" = '1' ]]; then
+		"plugin /usr/lib64/openvpn/plugins/openvpn-plugin-auth-pam.so openvpn" >> /etc/openvpn/server.conf
+	fi
 	# Enable net.ipv4.ip_forward for the system
 	echo 'net.ipv4.ip_forward=1' > /etc/sysctl.d/30-openvpn-forward.conf
 	# Enable without waiting for a reboot or service restart
@@ -382,8 +414,13 @@ proto $PROTOCOL
 sndbuf 0
 rcvbuf 0
 remote $IP $PORT
-resolv-retry infinite
-nobind
+resolv-retry infinite" > /etc/openvpn/client-common.txt
+
+	if [[ "$GOOGLEAUTH" = '1' ]]; then
+		echo "auth-user-pass
+comp-lzo yes" >> /etc/openvpn/client-common.txt
+	fi
+echo "nobind
 persist-key
 persist-tun
 remote-cert-tls server
@@ -391,7 +428,11 @@ auth SHA512
 cipher AES-256-CBC
 setenv opt block-outside-dns
 key-direction 1
-verb 3" > /etc/openvpn/client-common.txt
+verb 3" >> /etc/openvpn/client-common.txt
+
+	if [[ "$GOOGLEAUTH" = '1' ]]; then
+		su - $client@openvpn /usr/local/bin/google-authenticator -t -f
+	fi
 	# Generates the custom client.ovpn
 	newclient "$CLIENT"
 	echo
