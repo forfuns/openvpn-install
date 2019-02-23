@@ -234,7 +234,7 @@ else
 	if [[ "$GOOGLEAUTH" = '1' ]]; then
 		git clone https://github.com/google/google-authenticator-libpam.git
 		cd google-authenticator-libpam
-		./bootstrap.sh ./configure &&  ./configure && make && make install
+		./bootstrap.sh && ./configure && make && make install
 		cp -a /usr/local/lib/security/pam_google_authenticator.so /lib64/security/pam_google_authenticator.so
 		echo "# google auth
 auth        required    /usr/local/lib/security/pam_google_authenticator.so
