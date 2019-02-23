@@ -227,17 +227,14 @@ else
 		# Else, the distro is CentOS
 		yum install epel-release -y
 		yum install openvpn iptables openssl ca-certificates -y
-
-		if [[ "$GOOGLEAUTH" = '1' ]]; then
-
-			yum install -y google-authenticator
-
-		fi
-
+		yum install -y gcc gcc-c++ auotmake auotconf make libpng-devel libtool wget git
 	fi
 
 	# with Google auth
 	if [[ "$GOOGLEAUTH" = '1' ]]; then
+		git clone https://github.com/google/google-authenticator-libpam.git
+		cd google-authenticator-libpam
+		./bootstrap.sh && ./configure && make && make install
 		cp -a /usr/local/lib/security/pam_google_authenticator.so /lib64/security/pam_google_authenticator.so
 		echo "# google auth
 auth        required    /usr/local/lib/security/pam_google_authenticator.so
@@ -431,6 +428,7 @@ key-direction 1
 verb 3" >> /etc/openvpn/client-common.txt
 
 	if [[ "$GOOGLEAUTH" = '1' ]]; then
+		useradd $client
 		su - $client@openvpn /usr/local/bin/google-authenticator -t -f
 	fi
 	# Generates the custom client.ovpn
