@@ -23,7 +23,16 @@ git checkout dev
 bash openvpn-install.sh
 ```
 
+fix outside network connectivity
+```
+/etc/sysctl.conf
+net.ipv4.ip_forward = 1
 
+iptables -t nat -A POSTROUTING -s 10.8.0.0/24 -o eth0 -j MASQUERADE
+
+# remove POSTROUTING record
+iptables -t nat -D POSTROUTING 1
+```
 Once it ends, you can run it again to add more users, remove some of them or even completely uninstall OpenVPN.
 
 ### I want to run my own VPN but don't have a server for that
