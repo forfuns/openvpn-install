@@ -24,6 +24,7 @@ bash openvpn-install.sh
 ```
 
 close selinux (if use `google-authenticator` must do this)
+
 `setenforce 0`
 
 fix outside network connectivity
